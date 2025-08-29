@@ -1,0 +1,52 @@
+-> What is a Clock Divider IP?
+A Clock Divider IP (Intellectual Property) is a hardware module (written in Verilog, VHDL, etc.) that takes a high-frequency clock (like 100 MHz) as input and produces a lower-frequency clock (like 25 MHz, 10 MHz, etc.) as output.
+
+-> Why is Clock Division Needed?
+In RISC-V or any SoC design:
+
+Some peripherals (UART, I2C, SPI, timers) require slower clocks than the main CPU clock.
+
+You may want to reduce power consumption for certain blocks.
+
+You might want to synchronize signals across clock domains (though that requires more than just a divider).
+
+-> How Clock Divider Works
+It works by counting input clock cycles and toggling the output clock after a certain count.
+
+Example (DIVISOR = 4):
+clk_in	↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑ ↑
+count	0 1 2 3 0 1 2 3 0 1 2 3
+clk_out	0 1 1 0 0 1 1 0 0 1 1
+
+So:
+
+Every 2 clock edges (DIVISOR / 2), the clk_out toggles.
+So total period = 4 clk_in cycles → frequency is divided by 4.
+
+Key Components of the IP
+Component	        Role
+-> clk_in	        Input clock, usually system clock
+-> rst_n	        Active-low reset, used to initialize counter and output
+-> counter	        Counts clock cycles to control toggling
+-> clk_out	        Output clock at lower frequency
+-> DIVISOR	        Parameter to decide how much to divide the input clock
+
+-> Integration in RISC-V SoC
+As a Peripheral:
+can connect the clk_out to:
+
+UART module (needs specific baud rates)
+PWM/timer blocks
+Slow memory interface
+Debug or watchdog timers
+
+As a Shared Clock Source:
+
+Provide multiple divided clocks to different components.
+If using dynamic divisors, connect the module to a bus (like AXI/APB) to update DIVISOR from software.
+
+-> Benefits
+Simple, compact hardware.
+Saves power by slowing peripherals.
+Reduces complexity of custom clocks in synthesis and place & route.
+Can be reused across designs (IP concept).
